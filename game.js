@@ -8,13 +8,15 @@ document.addEventListener('DOMContentLoaded', () => {
     let score = 0;
     let scoreTimer = 0;
 
+    const playerImage = new Image();
+    playerImage.src = 'https://opengameart.org/sites/default/files/styles/medium/public/ship_0.png';
+
     const player = {
         x: canvas.width / 2 - 25,
         y: canvas.height / 2 - 25,
         width: 50,
         height: 50,
         speed: 5,
-        color: 'white',
         hp: 100,
         maxHp: 100
     };
@@ -179,8 +181,9 @@ document.addEventListener('DOMContentLoaded', () => {
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
         bullets.forEach(b => { ctx.fillStyle = b.color; ctx.fillRect(b.x, b.y, b.width, b.height); });
-        ctx.fillStyle = player.color;
-        ctx.fillRect(player.x, player.y, player.width, player.height);
+
+        ctx.drawImage(playerImage, player.x, player.y, player.width, player.height);
+
         enemies.forEach(e => { ctx.fillStyle = e.color; ctx.fillRect(e.x, e.y, e.width, e.height); });
 
         ctx.fillStyle = "white";
@@ -210,5 +213,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    gameLoop(0);
+    playerImage.onload = () => {
+        gameLoop(0);
+    };
 });
