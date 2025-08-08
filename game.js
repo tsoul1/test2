@@ -8,17 +8,24 @@ document.addEventListener('DOMContentLoaded', () => {
     let score = 0;
     let scoreTimer = 0;
 
-    const playerImage = new Image();
-    playerImage.src = 'https://opengameart.org/sites/default/files/styles/medium/public/ship_0.png';
+    const playerSpriteSheet = new Image();
+    playerSpriteSheet.src = 'https://raw.githubusercontent.com/tsoul1/test2/vampire-survivor-clone/player.png';
 
     const player = {
-        x: canvas.width / 2 - 25,
-        y: canvas.height / 2 - 25,
-        width: 50,
-        height: 50,
+        x: canvas.width / 2 - 32,
+        y: canvas.height / 2 - 32,
+        width: 64,
+        height: 64,
         speed: 5,
         hp: 100,
-        maxHp: 100
+        maxHp: 100,
+        sWidth: 64,
+        sHeight: 64,
+        currentFrame: 0,
+        totalFrames: 4,
+        animationRow: 0,
+        frameTimer: 0,
+        frameInterval: 150
     };
 
     const keysPressed = {};
@@ -100,7 +107,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (attackTimer) clearInterval(attackTimer);
         spawnTimer = setInterval(spawnEnemy, spawnInterval);
         attackTimer = setInterval(fireBullet, attackSpeed);
-        gameLoop();
+        requestAnimationFrame(gameLoop);
     }
 
     function update(timestamp) {
@@ -112,23 +119,44 @@ document.addEventListener('DOMContentLoaded', () => {
             scoreTimer = timestamp;
         }
 
-        if (keysPressed['w'] || keysPressed['ArrowUp']) player.y -= player.speed;
-        if (keysPressed['s'] || keysPressed['ArrowDown']) player.y += player.speed;
-        if (keysPressed['a'] || keysPressed['ArrowLeft']) player.x -= player.speed;
-        if (keysPressed['d'] || keysPressed['ArrowRight']) player.x += player.speed;
+        if (!player.frameTimer) player.frameTimer = timestamp;
+        const frameElapsed = timestamp - player.frameTimer;
+        let isMoving = keysPressed['w'] || keysPressed['ArrowUp'] || keysPressed['s'] || keysPressed['ArrowDown'] || keysPressed['a'] || keysPressed['ArrowLeft'] || keysPressed['d'] || keysPressed['ArrowRight'];
+
+        if (isMoving && frameElapsed > player.frameInterval) {
+            player.frameTimer = timestamp;
+            player.currentFrame = (player.currentFrame + 1) % player.totalFrames;
+        } else if (!isMoving) {
+            player.currentFrame = 0;
+        }
+
+        if (keysPressed['w'] || keysPressed['ArrowUp']) {
+            player.y -= player.speed;
+            player.animationRow = 1;
+        }
+        if (keysPressed['s'] || keysPressed['ArrowDown']) {
+            player.y += player.speed;
+            player.animationRow = 0;
+        }
+        if (keysPressed['a'] || keysPressed['ArrowLeft']) {
+            player.x -= player.speed;
+            player.animationRow = 2;
+        }
+        if (keysPressed['d'] || keysPressed['ArrowRight']) {
+            player.x += player.speed;
+            player.animationRow = 2;
+        }
 
         if (player.x < 0) player.x = 0;
         if (player.y < 0) player.y = 0;
         if (player.x + player.width > canvas.width) player.x = canvas.width - player.width;
         if (player.y + player.height > canvas.height) player.y = canvas.height - player.height;
 
-        // Update and check collisions
         for (let i = bullets.length - 1; i >= 0; i--) {
             const bullet = bullets[i];
             bullet.x += bullet.velocityX;
             bullet.y += bullet.velocityY;
 
-            // Remove bullets that are off-screen
             if (bullet.x < 0 || bullet.x > canvas.width || bullet.y < 0 || bullet.y > canvas.height) {
                 bullets.splice(i, 1);
                 continue;
@@ -142,7 +170,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     bullet.y + bullet.height > enemy.y) {
 
                     enemy.hp -= 1;
-                    bullets.splice(i, 1); // Remove bullet on hit
+                    bullets.splice(i, 1);
 
                     if (enemy.hp <= 0) {
                         enemies.splice(j, 1);
@@ -182,7 +210,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
         bullets.forEach(b => { ctx.fillStyle = b.color; ctx.fillRect(b.x, b.y, b.width, b.height); });
 
-        ctx.drawImage(playerImage, player.x, player.y, player.width, player.height);
+        const sx = player.currentFrame * player.sWidth;
+        const sy = player.animationRow * player.sHeight;
+        ctx.drawImage(
+            playerSpriteSheet,
+            sx, sy, player.sWidth, player.sHeight,
+            player.x, player.y, player.width, player.height
+        );
 
         enemies.forEach(e => { ctx.fillStyle = e.color; ctx.fillRect(e.x, e.y, e.width, e.height); });
 
@@ -213,7 +247,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    playerImage.onload = () => {
+    playerSpriteSheet.onload = () => {
         gameLoop(0);
     };
 });
