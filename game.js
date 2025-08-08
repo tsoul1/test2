@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let scoreTimer = 0;
 
     const playerImage = new Image();
-    playerImage.src = 'https://opengameart.org/sites/default/files/styles/medium/public/ship_0.png';
+    playerImage.src = 'https://raw.githubusercontent.com/tsoul1/test2/vampire-survivor-clone/char/player.png';
 
     const player = {
         x: canvas.width / 2 - 25,
